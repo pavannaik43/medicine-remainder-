@@ -29,7 +29,18 @@ export default function AuthModal({ onLogin, currentLang, onLanguageChange, t = 
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      let data;
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        if (text.includes('Proxy error') || res.status === 504 || res.status === 502) {
+          throw new Error('Backend server is not running on port 5000. Please start the server in a second terminal.');
+        }
+        throw new Error(text || 'Server returned an invalid response');
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Authentication failed');
       }
