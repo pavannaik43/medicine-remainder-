@@ -27,8 +27,8 @@ export default function AuthModal({
 
     const endpoint = isRegister ? `${API_AUTH}/register` : `${API_AUTH}/login`;
     const payload = isRegister
-      ? { name, email, password, role, relationship }
-      : { email, password, role };
+      ? { name: name.trim(), email: email.trim(), password, role, relationship: relationship.trim() }
+      : { email: email.trim(), password };
 
     try {
       const res = await fetch(endpoint, {
@@ -43,10 +43,14 @@ export default function AuthModal({
         data = await res.json();
       } else {
         const text = await res.text();
-        if (text.includes('Proxy error') || res.status === 504 || res.status === 502) {
-          throw new Error('Backend server is not running on port 5000. Please start the server in a second terminal.');
+        if (text.includes('Cannot POST') || text.includes('Cannot GET')) {
+          throw new Error('Endpoint not found. Please restart your backend server.');
         }
-        throw new Error(text || 'Server returned an invalid response');
+        if (text.includes('Proxy error') || res.status === 504 || res.status === 502) {
+          throw new Error('Backend server is not running on port 5000. Please start the server in terminal.');
+        }
+        const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        throw new Error(cleanText || 'Server returned an invalid response');
       }
 
       if (!res.ok) {
@@ -111,32 +115,65 @@ export default function AuthModal({
         </div>
 
         <div className="auth-modal__content">
-          <h2 id="auth-title" className="auth-modal__heading">
-            {isRegister ? (t.registerBtn || 'Create Account') : (t.loginTitle || 'Welcome to Medicine Reminder')}
-          </h2>
-          <p className="auth-modal__subheading">
-            {t.loginSubtitle || 'Choose your account or register to manage your medicines'}
-          </p>
-
-          {/* Role Toggle Selector */}
-          <div className="auth-role-selector">
+          {/* Main Auth Tabs: Sign In vs Create Account */}
+          <div className="auth-main-tabs">
             <button
               type="button"
-              className={`auth-role-btn ${role === 'patient' ? 'auth-role-btn--active' : ''}`}
-              onClick={() => setRole('patient')}
+              className={`auth-main-tab ${!isRegister ? 'auth-main-tab--active' : ''}`}
+              onClick={() => {
+                setIsRegister(false);
+                setError('');
+              }}
             >
-              <IconUser size={18} />
-              <span>{t.patientRole || 'Patient'}</span>
+              🔑 {t.signIn || 'Sign In'}
             </button>
             <button
               type="button"
-              className={`auth-role-btn ${role === 'caregiver' ? 'auth-role-btn--active' : ''}`}
-              onClick={() => setRole('caregiver')}
+              className={`auth-main-tab ${isRegister ? 'auth-main-tab--active' : ''}`}
+              onClick={() => {
+                setIsRegister(true);
+                setError('');
+              }}
             >
-              <IconShield size={18} />
-              <span>{t.caregiverRole || 'Caregiver'}</span>
+              📝 {t.registerBtn || 'Create Account'}
             </button>
           </div>
+
+          <div className="auth-header-text">
+            <h2 id="auth-title" className="auth-modal__heading">
+              {isRegister ? (t.registerBtn || 'Create a New Account') : (t.loginTitle || 'Sign in to Your Account')}
+            </h2>
+            <p className="auth-modal__subheading">
+              {isRegister
+                ? 'Register as a Patient or Caretaker to start tracking medicines.'
+                : 'Enter your email and password to access your schedule and alerts.'}
+            </p>
+          </div>
+
+          {/* Role Toggle Selector (Only when registering) */}
+          {isRegister && (
+            <div className="auth-role-section">
+              <span className="field-label-sm">{t.selectRole || 'I am registering as:'}</span>
+              <div className="auth-role-selector">
+                <button
+                  type="button"
+                  className={`auth-role-btn ${role === 'patient' ? 'auth-role-btn--active' : ''}`}
+                  onClick={() => setRole('patient')}
+                >
+                  <IconUser size={18} />
+                  <span>{t.patientRole || 'Patient'}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`auth-role-btn ${role === 'caregiver' ? 'auth-role-btn--active' : ''}`}
+                  onClick={() => setRole('caregiver')}
+                >
+                  <IconShield size={18} />
+                  <span>{t.caregiverRole || 'Caretaker / Caregiver'}</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Auth Form */}
           <form onSubmit={handleSubmit} className="auth-form">
@@ -200,12 +237,24 @@ export default function AuthModal({
 
             {error && (
               <div className="field-error" role="alert">
-                ⚠️ {error}
+                <span>⚠️ {error}</span>
+                {error.toLowerCase().includes('not found') && (
+                  <button
+                    type="button"
+                    className="error-link-btn"
+                    onClick={() => {
+                      setIsRegister(true);
+                      setError('');
+                    }}
+                  >
+                    Click here to Create Account →
+                  </button>
+                )}
               </div>
             )}
 
             <button type="submit" className="btn btn--primary auth-submit-btn" disabled={loading}>
-              {loading ? 'Please wait...' : isRegister ? (t.registerBtn || 'Create Account') : (t.loginBtn || 'Log In')}
+              {loading ? 'Please wait...' : isRegister ? (t.registerBtn || 'Create Account') : (t.loginBtn || 'Sign In')}
             </button>
           </form>
 
@@ -221,7 +270,7 @@ export default function AuthModal({
                 setError('');
               }}
             >
-              {isRegister ? (t.signIn || 'Sign In') : (t.register || 'Register')}
+              {isRegister ? (t.signIn || 'Sign In') : (t.register || 'Create Account')}
             </button>
           </div>
         </div>
