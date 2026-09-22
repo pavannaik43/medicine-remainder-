@@ -26,6 +26,7 @@ export default function Header({
   onLanguageChange,
   onOpenCaregiverAccess,
   onSwitchAccount,
+  onLogout,
   t = {},
 }) {
   const [currentDateTime, setCurrentDateTime] = useState({
@@ -111,10 +112,10 @@ export default function Header({
               <button
                 type="button"
                 className="btn-header-action btn-header-action--switch"
-                onClick={onSwitchAccount}
-                title={t.logout || 'Switch / Logout'}
+                onClick={onLogout || onSwitchAccount}
+                title={t.logout || 'Log Out / Switch Account'}
               >
-                {t.logout || 'Switch'}
+                🚪 {t.logout || 'Log Out'}
               </button>
             </div>
           )}

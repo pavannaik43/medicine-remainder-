@@ -6,12 +6,18 @@ import {
   IconClock,
   IconCheck,
   IconPlus,
+  IconEdit,
+  IconTrash,
 } from './Icons';
 import { API_CAREGIVER } from '../config/api';
 
 export default function CaregiverView({
   currentUser,
   onSimulateStatus,
+  onAddMedicine,
+  onEditMedicine,
+  onDeleteMedicine,
+  reloadTrigger = 0,
   t = {},
 }) {
   const [patients, setPatients] = useState([]);
@@ -44,7 +50,7 @@ export default function CaregiverView({
 
   useEffect(() => {
     loadPatients();
-  }, [loadPatients]);
+  }, [loadPatients, reloadTrigger]);
 
   const handleConnectPatient = async (e) => {
     e.preventDefault();
@@ -267,16 +273,35 @@ export default function CaregiverView({
 
           {/* Connected Patient Today's Schedule with Live Status */}
           <div className="caregiver-patient-section">
-            <div className="section-header">
+            <div className="section-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
               <h3 className="section-title">
                 {selectedPatient.name}'s Medicines & Today's Status
               </h3>
+              {onAddMedicine && (
+                <button
+                  type="button"
+                  className="btn btn--primary btn--sm"
+                  onClick={() => onAddMedicine(selectedPatient.id)}
+                >
+                  <IconPlus size={15} /> + Add Medicine for {selectedPatient.name}
+                </button>
+              )}
             </div>
 
             {(!selectedPatient.reminders || selectedPatient.reminders.length === 0) ? (
               <div className="empty-state empty-state--compact">
                 <IconPill size={36} />
                 <p>No active medicines scheduled for this patient.</p>
+                {onAddMedicine && (
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--sm"
+                    onClick={() => onAddMedicine(selectedPatient.id)}
+                    style={{ marginTop: '8px' }}
+                  >
+                    <IconPlus size={15} /> + Add Medicine for {selectedPatient.name}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="caregiver-meds-list">
@@ -336,39 +361,66 @@ export default function CaregiverView({
                           {med.notes && <span className="instructions-label">Note: "{med.notes}"</span>}
                         </div>
 
-                        {/* Interactive Project Demonstration Simulation Tools */}
-                        <div className="caregiver-demo-actions">
-                          <span className="demo-actions-label">Demonstration Controls:</span>
-                          <button
-                            type="button"
-                            className="btn btn--outline btn--sm"
-                            onClick={async () => {
-                              await onSimulateStatus(med, 'taken');
-                              await loadPatients();
-                            }}
-                          >
-                            ✓ Mark TAKEN
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn--outline btn--sm"
-                            onClick={async () => {
-                              await onSimulateStatus(med, 'taken_late');
-                              await loadPatients();
-                            }}
-                          >
-                            ⏱ Mark TAKEN LATE
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn--ghost-danger btn--sm"
-                            onClick={async () => {
-                              await onSimulateStatus(med, 'missed');
-                              await loadPatients();
-                            }}
-                          >
-                            ⚠️ Mark MISSED
-                          </button>
+                        {/* Interactive Caregiver Actions: Edit / Delete & Simulation */}
+                        <div className="caregiver-card-action-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--color-border)' }}>
+                          {/* Caregiver Medicine Management */}
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            {onEditMedicine && (
+                              <button
+                                type="button"
+                                className="btn btn--outline btn--sm"
+                                onClick={() => onEditMedicine(med, selectedPatient.id)}
+                                title="Edit Medicine"
+                              >
+                                <IconEdit size={13} /> Edit
+                              </button>
+                            )}
+                            {onDeleteMedicine && (
+                              <button
+                                type="button"
+                                className="btn btn--ghost-danger btn--sm"
+                                onClick={() => onDeleteMedicine(med, selectedPatient.id)}
+                                title="Delete Medicine"
+                              >
+                                <IconTrash size={13} /> Delete
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Interactive Project Demonstration Simulation Tools */}
+                          <div className="caregiver-demo-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <span className="demo-actions-label" style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>Status Test:</span>
+                            <button
+                              type="button"
+                              className="btn btn--outline btn--sm"
+                              onClick={async () => {
+                                await onSimulateStatus(med, 'taken');
+                                await loadPatients();
+                              }}
+                            >
+                              ✓ Taken
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn--outline btn--sm"
+                              onClick={async () => {
+                                await onSimulateStatus(med, 'taken_late');
+                                await loadPatients();
+                              }}
+                            >
+                              ⏱ Late
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn--ghost-danger btn--sm"
+                              onClick={async () => {
+                                await onSimulateStatus(med, 'missed');
+                                await loadPatients();
+                              }}
+                            >
+                              ⚠️ Missed
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -69,26 +69,13 @@ export default function App() {
       const saved = localStorage.getItem('app_user');
       if (saved) return JSON.parse(saved);
     } catch (e) {}
-    // Default to Patient demo account for instant readiness
-    return {
-      id: 'patient-1',
-      name: 'Ramesh Kumar (Patient)',
-      email: 'patient@demo.com',
-      role: 'patient',
-      pairingCode: 'MED-7842',
-      connectedCaregivers: [
-        {
-          id: 'caregiver-1',
-          name: 'Priya Sharma (Caregiver)',
-          email: 'caregiver@demo.com',
-          relationship: 'Family Member / Daughter',
-        },
-      ],
-    };
+    return null;
   });
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [caregiverAccessModalOpen, setCaregiverAccessModalOpen] = useState(false);
+  const [targetPatientId, setTargetPatientId] = useState(null);
+  const [caregiverReloadKey, setCaregiverReloadKey] = useState(0);
 
   // Active Tab
   const [activeTab, setActiveTab] = useState(() => {
@@ -114,6 +101,10 @@ export default function App() {
 
   // Load reminders and history for current user (or all if caregiver)
   const loadData = useCallback(async () => {
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const patientParam = currentUser?.role === 'patient' ? `?patientId=${currentUser.id}` : '';
@@ -478,9 +469,11 @@ export default function App() {
   // Save/Create Reminder
   async function handleSaveReminder(form) {
     try {
+      const effectivePatientId =
+        targetPatientId || (currentUser?.role === 'patient' ? currentUser.id : 'patient-1');
       const payload = {
         ...form,
-        patientId: currentUser?.id || 'patient-1',
+        patientId: effectivePatientId,
       };
 
       if (editingReminder) {
@@ -504,6 +497,7 @@ export default function App() {
         setReminders((prev) => [...prev, created]);
         setToast('Medicine added to schedule');
       }
+      setCaregiverReloadKey((k) => k + 1);
       closeForm();
     } catch (err) {
       setToast('Something went wrong saving the medicine');
@@ -524,6 +518,7 @@ export default function App() {
       const res = await fetch(`${API_BASE}/${reminder.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
       setToast(`${reminder.name} removed`);
+      setCaregiverReloadKey((k) => k + 1);
     } catch (err) {
       setReminders(prevReminders);
       setToast('Could not delete medicine');
@@ -590,21 +585,72 @@ export default function App() {
     setToast(`Logged in as ${user.name}`);
   };
 
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('app_user');
+    } catch (e) {}
+    setActiveTab('schedule');
+    setAuthModalOpen(false);
+    setToast('Logged out successfully');
+  };
+
   function openAddForm() {
     unlockAudio();
+    setTargetPatientId(null);
     setEditingReminder(null);
     setFormOpen(true);
   }
 
   function openEditForm(reminder) {
     unlockAudio();
+    setTargetPatientId(null);
     setEditingReminder(reminder);
     setFormOpen(true);
   }
 
+  // Caregiver-specific medicine actions for connected patients
+  const handleCaregiverAddMedicine = (patientId) => {
+    unlockAudio();
+    setTargetPatientId(patientId);
+    setEditingReminder(null);
+    setFormOpen(true);
+  };
+
+  const handleCaregiverEditMedicine = (reminder, patientId) => {
+    unlockAudio();
+    setTargetPatientId(patientId);
+    setEditingReminder(reminder);
+    setFormOpen(true);
+  };
+
+  const handleCaregiverDeleteMedicine = async (reminder, patientId) => {
+    await handleDeleteReminder(reminder);
+    setCaregiverReloadKey((k) => k + 1);
+  };
+
   function closeForm() {
     setFormOpen(false);
     setEditingReminder(null);
+    setTargetPatientId(null);
+  }
+
+  // FIRST SCREEN: If user is not logged in, present the full-screen Login / Register Gateway
+  if (!currentUser) {
+    return (
+      <div className="app auth-gateway-screen" onClick={unlockAudio}>
+        <AuthModal
+          isGateway={true}
+          onLogin={handleLoginSuccess}
+          currentLang={currentLang}
+          onLanguageChange={handleLanguageChange}
+          t={t}
+        />
+        <div className={`toast ${toast ? 'toast--visible' : ''}`} role="status" aria-live="polite">
+          {toast}
+        </div>
+      </div>
+    );
   }
 
   const isCaregiver = currentUser?.role === 'caregiver';
@@ -625,6 +671,7 @@ export default function App() {
           onLanguageChange={handleLanguageChange}
           onOpenCaregiverAccess={() => setCaregiverAccessModalOpen(true)}
           onSwitchAccount={() => setAuthModalOpen(true)}
+          onLogout={handleLogout}
           t={t}
         />
 
@@ -636,6 +683,10 @@ export default function App() {
           <CaregiverView
             currentUser={currentUser}
             onSimulateStatus={handleSimulateStatus}
+            onAddMedicine={handleCaregiverAddMedicine}
+            onEditMedicine={handleCaregiverEditMedicine}
+            onDeleteMedicine={handleCaregiverDeleteMedicine}
+            reloadTrigger={caregiverReloadKey}
             t={t}
           />
         )}
@@ -730,6 +781,7 @@ export default function App() {
       {authModalOpen && (
         <AuthModal
           onLogin={handleLoginSuccess}
+          onClose={() => setAuthModalOpen(false)}
           currentLang={currentLang}
           onLanguageChange={handleLanguageChange}
           t={t}

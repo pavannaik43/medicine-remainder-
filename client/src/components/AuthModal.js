@@ -2,7 +2,14 @@ import React, { useState } from 'react';
 import { IconShield, IconUser, IconGlobe } from './Icons';
 import { API_AUTH } from '../config/api';
 
-export default function AuthModal({ onLogin, currentLang, onLanguageChange, t = {} }) {
+export default function AuthModal({
+  onLogin,
+  onClose,
+  isGateway = false,
+  currentLang,
+  onLanguageChange,
+  t = {},
+}) {
   const [isRegister, setIsRegister] = useState(false);
   const [role, setRole] = useState('patient'); // 'patient' | 'caregiver'
   const [name, setName] = useState('');
@@ -98,8 +105,8 @@ export default function AuthModal({ onLogin, currentLang, onLanguageChange, t = 
   };
 
   return (
-    <div className="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-title">
-      <div className="auth-modal">
+    <div className={isGateway ? "auth-gateway-container" : "auth-overlay"} role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <div className={`auth-modal ${isGateway ? 'auth-modal--gateway' : ''}`}>
         {/* Header with Language Selector */}
         <div className="auth-modal__top-bar">
           <div className="auth-modal__brand">
@@ -107,29 +114,42 @@ export default function AuthModal({ onLogin, currentLang, onLanguageChange, t = 
             <span className="auth-modal__app-title">{t.appName || 'Medicine Reminder'}</span>
           </div>
 
-          <div className="language-selector-wrap">
-            <span className="language-globe-icon"><IconGlobe size={14} /></span>
-            <button
-              type="button"
-              className={`lang-btn ${currentLang === 'en' ? 'lang-btn--active' : ''}`}
-              onClick={() => onLanguageChange('en')}
-            >
-              English
-            </button>
-            <button
-              type="button"
-              className={`lang-btn ${currentLang === 'te' ? 'lang-btn--active' : ''}`}
-              onClick={() => onLanguageChange('te')}
-            >
-              తెలుగు
-            </button>
-            <button
-              type="button"
-              className={`lang-btn ${currentLang === 'hi' ? 'lang-btn--active' : ''}`}
-              onClick={() => onLanguageChange('hi')}
-            >
-              हिंदी
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="language-selector-wrap">
+              <span className="language-globe-icon"><IconGlobe size={14} /></span>
+              <button
+                type="button"
+                className={`lang-btn ${currentLang === 'en' ? 'lang-btn--active' : ''}`}
+                onClick={() => onLanguageChange('en')}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                className={`lang-btn ${currentLang === 'te' ? 'lang-btn--active' : ''}`}
+                onClick={() => onLanguageChange('te')}
+              >
+                తెలుగు
+              </button>
+              <button
+                type="button"
+                className={`lang-btn ${currentLang === 'hi' ? 'lang-btn--active' : ''}`}
+                onClick={() => onLanguageChange('hi')}
+              >
+                हिंदी
+              </button>
+            </div>
+
+            {!isGateway && onClose && (
+              <button
+                type="button"
+                className="icon-btn-close"
+                onClick={onClose}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
 
