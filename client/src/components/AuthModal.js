@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IconShield, IconUser, IconGlobe } from './Icons';
+import { IconShield, IconUser, IconGlobe, IconEye, IconEyeOff } from './Icons';
 import { API_AUTH } from '../config/api';
 
 export default function AuthModal({
@@ -15,6 +15,7 @@ export default function AuthModal({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [relationship, setRelationship] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,50 +58,6 @@ export default function AuthModal({
       setError(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleQuickDemoLogin = (demoRole) => {
-    if (demoRole === 'patient') {
-      setEmail('patient@demo.com');
-      setPassword('password123');
-      setRole('patient');
-      setIsRegister(false);
-      onLogin({
-        id: 'patient-1',
-        name: 'Ramesh Kumar (Patient)',
-        email: 'patient@demo.com',
-        role: 'patient',
-        pairingCode: 'MED-7842',
-        connectedCaregivers: [
-          {
-            id: 'caregiver-1',
-            name: 'Priya Sharma (Caregiver)',
-            email: 'caregiver@demo.com',
-            relationship: 'Family Member / Daughter',
-          },
-        ],
-      });
-    } else {
-      setEmail('caregiver@demo.com');
-      setPassword('password123');
-      setRole('caregiver');
-      setIsRegister(false);
-      onLogin({
-        id: 'caregiver-1',
-        name: 'Priya Sharma (Caregiver)',
-        email: 'caregiver@demo.com',
-        role: 'caregiver',
-        connectedPatients: [
-          {
-            id: 'patient-1',
-            name: 'Ramesh Kumar (Patient)',
-            email: 'patient@demo.com',
-            pairingCode: 'MED-7842',
-            relationship: 'Father',
-          },
-        ],
-      });
     }
   };
 
@@ -181,31 +138,6 @@ export default function AuthModal({
             </button>
           </div>
 
-          {/* Quick Demo 1-Click Buttons */}
-          <div className="auth-demo-section">
-            <span className="auth-demo-title">{t.demoAccounts || 'Quick Demo Logins:'}</span>
-            <div className="auth-demo-btns">
-              <button
-                type="button"
-                className="btn btn--outline btn--sm auth-demo-pill"
-                onClick={() => handleQuickDemoLogin('patient')}
-              >
-                {t.demoPatientBtn || '👤 Demo Patient (Ramesh)'}
-              </button>
-              <button
-                type="button"
-                className="btn btn--outline btn--sm auth-demo-pill"
-                onClick={() => handleQuickDemoLogin('caregiver')}
-              >
-                {t.demoCaregiverBtn || '🛡️ Demo Caregiver (Priya)'}
-              </button>
-            </div>
-          </div>
-
-          <div className="auth-divider">
-            <span>or continue with email</span>
-          </div>
-
           {/* Auth Form */}
           <form onSubmit={handleSubmit} className="auth-form">
             {isRegister && (
@@ -234,13 +166,24 @@ export default function AuthModal({
 
             <label className="field">
               <span>{t.password || 'Password'} *</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
+              <div className="password-input-wrapper">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+                </button>
+              </div>
             </label>
 
             {isRegister && role === 'caregiver' && (
@@ -286,3 +229,4 @@ export default function AuthModal({
     </div>
   );
 }
+
