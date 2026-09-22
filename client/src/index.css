@@ -1,0 +1,102 @@
+:root {
+  /* ---- Clinical Healthcare Palette ---- */
+  --color-bg: #f8fafc;           /* clean slate light background */
+  --color-surface: #ffffff;      /* crisp pure white card surface */
+  --color-surface-subtle: #f1f5f9;
+  --color-text: #0f172a;         /* slate 900 for high readability */
+  --color-text-muted: #64748b;   /* slate 500 */
+  --color-border: #e2e8f0;       /* slate 200 */
+  --color-border-hover: #cbd5e1;
+
+  --color-primary: #0284c7;      /* healthcare clinical blue */
+  --color-primary-dark: #0369a1; /* deep clinical blue */
+  --color-primary-light: #e0f2fe;/* soft blue background */
+
+  --color-success: #059669;      /* medical emerald */
+  --color-success-dark: #047857;
+  --color-success-light: #d1fae5;
+
+  --color-danger: #dc2626;       /* urgent alert red */
+  --color-danger-light: #fee2e2;
+
+  --color-warning: #d97706;      /* amber warning */
+  --color-warning-light: #fef3c7;
+
+  /* time-of-day clinical accents */
+  --color-morning: #ea580c;
+  --color-morning-light: #fff7ed;
+  --color-afternoon: #0284c7;
+  --color-afternoon-light: #f0f9ff;
+  --color-evening: #7c3aed;
+  --color-evening-light: #f5f3ff;
+  --color-night: #334155;
+  --color-night-light: #f8fafc;
+
+  /* ---- typography ---- */
+  --font-heading: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* ---- layout & elevation ---- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-card-hover: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  margin: 0;
+  color: var(--color-text);
+  letter-spacing: -0.015em;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

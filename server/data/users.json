@@ -1,0 +1,38 @@
+[
+  {
+    "id": "patient-1",
+    "name": "Ramesh Kumar (Patient)",
+    "email": "patient@demo.com",
+    "password": "password123",
+    "role": "patient",
+    "pairingCode": "MED-7842",
+    "connectedCaregivers": [
+      {
+        "id": "caregiver-1",
+        "name": "Priya Sharma (Caregiver)",
+        "email": "caregiver@demo.com",
+        "relationship": "Daughter / Nurse",
+        "connectedAt": "2026-09-22T16:14:00.650Z"
+      }
+    ],
+    "createdAt": "2026-09-20T08:00:00.000Z"
+  },
+  {
+    "id": "caregiver-1",
+    "name": "Priya Sharma (Caregiver)",
+    "email": "caregiver@demo.com",
+    "password": "password123",
+    "role": "caregiver",
+    "connectedPatients": [
+      {
+        "id": "patient-1",
+        "name": "Ramesh Kumar (Patient)",
+        "email": "patient@demo.com",
+        "pairingCode": "MED-7842",
+        "relationship": "Daughter / Nurse",
+        "connectedAt": "2026-09-22T16:14:00.650Z"
+      }
+    ],
+    "createdAt": "2026-09-20T09:00:00.000Z"
+  }
+]
