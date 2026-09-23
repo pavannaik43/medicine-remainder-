@@ -126,11 +126,14 @@ export default function AuthModal({
   return (
     <div className={isGateway ? "auth-gateway-container" : "auth-overlay"} role="dialog" aria-modal="true" aria-labelledby="auth-title">
       <div className={`auth-modal ${isGateway ? 'auth-modal--gateway' : ''}`}>
-        {/* Header with Language Selector */}
+        {/* Header with Brand & Language Selector */}
         <div className="auth-modal__top-bar">
           <div className="auth-modal__brand">
             <span className="auth-modal__logo-icon">💊</span>
-            <span className="auth-modal__app-title">{t.appName || 'Medicine Reminder'}</span>
+            <div>
+              <span className="auth-modal__app-title">{t.appName || 'Medicine Reminder'}</span>
+              <span className="auth-modal__app-tagline">Daily Health & Schedule Assistant</span>
+            </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -141,7 +144,7 @@ export default function AuthModal({
                 className={`lang-btn ${currentLang === 'en' ? 'lang-btn--active' : ''}`}
                 onClick={() => onLanguageChange('en')}
               >
-                English
+                EN
               </button>
               <button
                 type="button"
@@ -180,88 +183,132 @@ export default function AuthModal({
               className={`auth-main-tab ${!isRegister ? 'auth-main-tab--active' : ''}`}
               onClick={() => handleTabSwitch(false)}
             >
-              🔑 {t.signIn || 'Sign In'}
+              <span className="auth-tab-icon">🔑</span>
+              <span>{t.signIn || 'Sign In'}</span>
             </button>
             <button
               type="button"
               className={`auth-main-tab ${isRegister ? 'auth-main-tab--active' : ''}`}
               onClick={() => handleTabSwitch(true)}
             >
-              📝 {t.registerBtn || 'Create Account'}
+              <span className="auth-tab-icon">✨</span>
+              <span>{t.registerBtn || 'Create Account'}</span>
             </button>
           </div>
 
           {/* Success Notification Banner */}
           {successMessage && (
-            <div
-              className="badge badge--success"
-              style={{
-                display: 'block',
-                padding: '12px 14px',
-                marginBottom: '16px',
-                borderRadius: '8px',
-                fontSize: '0.92rem',
-                lineHeight: '1.45',
-                border: '1px solid #86efac',
-                backgroundColor: '#f0fdf4',
-                color: '#166534',
-                fontWeight: '600',
-              }}
-              role="status"
-            >
-              ✓ {successMessage}
+            <div className="auth-alert-banner auth-alert-banner--success" role="status">
+              <span className="auth-alert-icon">✓</span>
+              <div>
+                <strong>Account Created!</strong>
+                <p>{successMessage}</p>
+              </div>
             </div>
           )}
 
+          {/* Heading */}
           <div className="auth-header-text">
             <h2 id="auth-title" className="auth-modal__heading">
-              {isRegister ? (t.registerBtn || 'Create a New Account') : (t.loginTitle || 'Sign in to Your Account')}
+              {isRegister ? (t.registerBtn || 'Create an Account') : (t.loginTitle || 'Welcome Back')}
             </h2>
             <p className="auth-modal__subheading">
               {isRegister
-                ? 'Fill in your details below to set up your account.'
-                : 'Select your role and enter your credentials to open your dashboard.'}
+                ? 'Select your role below to configure your tailored experience.'
+                : 'Select your role to access your personalized medical portal.'}
             </p>
           </div>
 
-          {/* Role Selection (Mandatory for both Login and Registration) */}
+          {/* PREMIUM ROLE SELECTOR CARDS */}
           <div className="auth-role-section">
-            <span className="field-label-sm">
-              <strong>{isRegister ? (t.selectRole || 'I am registering as:') : (t.whoAreYou || 'Who are you? (Select your role):')}</strong>
-            </span>
-            <div className="auth-role-selector">
-              <button
-                type="button"
-                className={`auth-role-btn ${role === 'patient' ? 'auth-role-btn--active' : ''}`}
+            <div className="auth-role-section__label-row">
+              <span className="auth-role-section__title">
+                {isRegister ? (t.selectRole || 'Choose Your Account Type:') : (t.whoAreYou || 'Select Who You Are:')}
+              </span>
+              <span className={`auth-role-active-indicator auth-role-active-indicator--${role}`}>
+                Active: {role === 'caregiver' ? 'Caretaker' : 'Patient'}
+              </span>
+            </div>
+
+            <div className="auth-role-grid">
+              {/* Patient Card */}
+              <div
+                className={`auth-role-card auth-role-card--patient ${role === 'patient' ? 'auth-role-card--active' : ''}`}
                 onClick={() => setRole('patient')}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setRole('patient'); }}
               >
-                <IconUser size={20} />
-                <div style={{ textAlign: 'left' }}>
-                  <strong style={{ display: 'block', fontSize: '0.95rem' }}>{t.patientRole || 'Patient'}</strong>
-                  <small style={{ fontSize: '0.74rem', opacity: 0.85 }}>Personal medicines & alarms</small>
+                <div className="auth-role-card__header">
+                  <div className="auth-role-card__icon-badge auth-role-card__icon-badge--patient">
+                    <IconUser size={24} />
+                  </div>
+                  <div className="auth-role-card__radio">
+                    {role === 'patient' && <span className="auth-role-card__check-dot">✓</span>}
+                  </div>
                 </div>
-              </button>
-              <button
-                type="button"
-                className={`auth-role-btn ${role === 'caregiver' ? 'auth-role-btn--active' : ''}`}
+
+                <div className="auth-role-card__info">
+                  <div className="auth-role-card__title-row">
+                    <h3 className="auth-role-card__name">{t.patientRole || 'Patient'}</h3>
+                    <span className="auth-role-card__tag auth-role-card__tag--patient">Self</span>
+                  </div>
+                  <p className="auth-role-card__desc">
+                    I take medicines, manage daily reminders, alarms & log dose history.
+                  </p>
+                </div>
+
+                {role === 'patient' && (
+                  <div className="auth-role-card__footer-bar auth-role-card__footer-bar--patient">
+                    <span>Selected Role</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Caretaker Card */}
+              <div
+                className={`auth-role-card auth-role-card--caregiver ${role === 'caregiver' ? 'auth-role-card--active' : ''}`}
                 onClick={() => setRole('caregiver')}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setRole('caregiver'); }}
               >
-                <IconShield size={20} />
-                <div style={{ textAlign: 'left' }}>
-                  <strong style={{ display: 'block', fontSize: '0.95rem' }}>{t.caregiverRole || 'Caretaker'}</strong>
-                  <small style={{ fontSize: '0.74rem', opacity: 0.85 }}>Monitor patient & adherence</small>
+                <div className="auth-role-card__header">
+                  <div className="auth-role-card__icon-badge auth-role-card__icon-badge--caregiver">
+                    <IconShield size={24} />
+                  </div>
+                  <div className="auth-role-card__radio">
+                    {role === 'caregiver' && <span className="auth-role-card__check-dot">✓</span>}
+                  </div>
                 </div>
-              </button>
+
+                <div className="auth-role-card__info">
+                  <div className="auth-role-card__title-row">
+                    <h3 className="auth-role-card__name">{t.caregiverRole || 'Caretaker / Family'}</h3>
+                    <span className="auth-role-card__tag auth-role-card__tag--caregiver">Care</span>
+                  </div>
+                  <p className="auth-role-card__desc">
+                    I monitor patients, configure medicines, view adherence & receive dose alerts.
+                  </p>
+                </div>
+
+                {role === 'caregiver' && (
+                  <div className="auth-role-card__footer-bar auth-role-card__footer-bar--caregiver">
+                    <span>Selected Role</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Auth Form */}
           <form onSubmit={handleSubmit} className="auth-form">
             {isRegister && (
-              <label className="field">
-                <span>{t.fullName || 'Full Name'} *</span>
+              <label className="field auth-field">
+                <span className="field-label-text">{t.fullName || 'Full Name'} *</span>
                 <input
                   type="text"
+                  className="auth-input"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Ramesh Kumar"
@@ -271,25 +318,27 @@ export default function AuthModal({
               </label>
             )}
 
-            <label className="field">
-              <span>{t.emailAddress || 'Email Address'} *</span>
+            <label className="field auth-field">
+              <span className="field-label-text">{t.emailAddress || 'Email Address'} *</span>
               <input
                 type="email"
+                className="auth-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. user@example.com"
+                placeholder="e.g. name@example.com"
                 required
               />
             </label>
 
-            <label className="field">
-              <span>{t.password || 'Password'} *</span>
+            <label className="field auth-field">
+              <span className="field-label-text">{t.password || 'Password'} *</span>
               <div className="password-input-wrapper">
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  className="auth-input"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={isRegister ? 'Create a secure password' : 'Enter your password'}
+                  placeholder={isRegister ? 'Create a secure password (min 4 chars)' : 'Enter your password'}
                   required
                 />
                 <button
@@ -306,11 +355,12 @@ export default function AuthModal({
 
             {/* Confirm Password (Registration only) */}
             {isRegister && (
-              <label className="field">
-                <span>Confirm Password *</span>
+              <label className="field auth-field">
+                <span className="field-label-text">Confirm Password *</span>
                 <div className="password-input-wrapper">
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
+                    className="auth-input"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter your password"
@@ -330,51 +380,62 @@ export default function AuthModal({
             )}
 
             {isRegister && role === 'caregiver' && (
-              <label className="field">
-                <span>Relationship to Patient (e.g. Daughter, Doctor, Nurse)</span>
+              <label className="field auth-field">
+                <span className="field-label-text">Relationship to Patient (e.g. Daughter, Doctor, Guardian)</span>
                 <input
                   type="text"
+                  className="auth-input"
                   value={relationship}
                   onChange={(e) => setRelationship(e.target.value)}
-                  placeholder="e.g. Family Caregiver"
+                  placeholder="e.g. Family Member / Caretaker"
                 />
               </label>
             )}
 
             {error && (
-              <div className="field-error" role="alert">
-                <span>⚠️ {error}</span>
-                {error.toLowerCase().includes('not found') && !isRegister && (
-                  <button
-                    type="button"
-                    className="error-link-btn"
-                    onClick={() => handleTabSwitch(true)}
-                  >
-                    Click here to Create Account →
-                  </button>
-                )}
+              <div className="auth-alert-banner auth-alert-banner--error" role="alert">
+                <span className="auth-alert-icon">⚠️</span>
+                <div>
+                  <p>{error}</p>
+                  {error.toLowerCase().includes('not found') && !isRegister && (
+                    <button
+                      type="button"
+                      className="error-link-btn"
+                      onClick={() => handleTabSwitch(true)}
+                    >
+                      Click here to Create Account →
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
-            <button type="submit" className="btn btn--primary auth-submit-btn" disabled={loading}>
-              {loading
-                ? 'Please wait...'
-                : isRegister
-                ? (t.registerBtn || 'Register Account')
-                : (t.loginBtn || `Sign In as ${role === 'caregiver' ? 'Caretaker' : 'Patient'}`)}
+            <button
+              type="submit"
+              className={`btn auth-submit-btn auth-submit-btn--${role}`}
+              disabled={loading}
+            >
+              {loading ? (
+                <span>🔄 Authenticating...</span>
+              ) : isRegister ? (
+                <span>✨ Create {role === 'caregiver' ? 'Caretaker' : 'Patient'} Account →</span>
+              ) : (
+                <span>🚪 Sign In as {role === 'caregiver' ? 'Caretaker' : 'Patient'} →</span>
+              )}
             </button>
           </form>
 
+          {/* Bottom Switcher */}
           <div className="auth-modal__switch">
             <span>
-              {isRegister ? (t.alreadyHaveAccount || 'Already have an account?') : (t.dontHaveAccount || "Don't have an account?")}{' '}
+              {isRegister ? (t.alreadyHaveAccount || 'Already have an account?') : (t.dontHaveAccount || "Don't have an account yet?")}{' '}
             </span>
             <button
               type="button"
               className="auth-link-btn"
               onClick={() => handleTabSwitch(!isRegister)}
             >
-              {isRegister ? (t.signIn || 'Sign In') : (t.register || 'Create Account')}
+              {isRegister ? (t.signIn || 'Sign In here') : (t.register || 'Create an account')}
             </button>
           </div>
         </div>
