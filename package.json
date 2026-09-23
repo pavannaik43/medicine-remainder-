@@ -1,0 +1,11 @@
+{
+  "name": "medicine-reminder-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "start": "cd client && npm start",
+    "server": "cd server && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run start\""
+  }
+}
