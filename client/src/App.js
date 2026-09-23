@@ -63,10 +63,12 @@ export default function App() {
     } catch (e) {}
   };
 
-  // User Auth & Role State
+  // User Auth & Role State: Always start with Login gateway on fresh browser visits
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const saved = localStorage.getItem('app_user');
+      // Clear any legacy persistent localStorage cache so users are not auto-logged in from past sessions
+      localStorage.removeItem('app_user');
+      const saved = sessionStorage.getItem('app_user');
       if (saved) return JSON.parse(saved);
     } catch (e) {}
     return null;
@@ -128,7 +130,7 @@ export default function App() {
         if (freshUser && freshUser.id) {
           setCurrentUser(freshUser);
           try {
-            localStorage.setItem('app_user', JSON.stringify(freshUser));
+            sessionStorage.setItem('app_user', JSON.stringify(freshUser));
           } catch (e) {}
         }
       }
@@ -578,7 +580,9 @@ export default function App() {
         );
         const updatedUser = { ...currentUser, connectedCaregivers: updatedCaregivers };
         setCurrentUser(updatedUser);
-        localStorage.setItem('app_user', JSON.stringify(updatedUser));
+        try {
+          sessionStorage.setItem('app_user', JSON.stringify(updatedUser));
+        } catch (e) {}
         setToast(t.caregiverRemovedSuccess || 'Caregiver access has been removed.');
       }
     } catch (e) {
@@ -590,7 +594,7 @@ export default function App() {
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
     try {
-      localStorage.setItem('app_user', JSON.stringify(user));
+      sessionStorage.setItem('app_user', JSON.stringify(user));
     } catch (e) {}
     setActiveTab(user.role === 'caregiver' ? 'caregiver' : 'schedule');
     setAuthModalOpen(false);
@@ -600,6 +604,7 @@ export default function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     try {
+      sessionStorage.removeItem('app_user');
       localStorage.removeItem('app_user');
     } catch (e) {}
     setActiveTab('schedule');
@@ -808,7 +813,7 @@ export default function App() {
           onUpdateUser={(updated) => {
             setCurrentUser(updated);
             try {
-              localStorage.setItem('app_user', JSON.stringify(updated));
+              sessionStorage.setItem('app_user', JSON.stringify(updated));
             } catch (e) {}
           }}
           t={t}
