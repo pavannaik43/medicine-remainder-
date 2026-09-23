@@ -162,6 +162,13 @@ function isValidTime(value) {
 // AUTH & USER ROUTES
 // =========================================================================
 
+const normalizeRole = (r) => {
+  if (!r) return 'patient';
+  const lower = String(r).toLowerCase().trim();
+  if (lower === 'caregiver' || lower === 'caretaker') return 'caregiver';
+  return 'patient';
+};
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -180,15 +187,17 @@ app.post('/api/auth/register', (req, res) => {
     return res.status(400).json({ error: 'An account with this email already exists.' });
   }
 
+  const normalizedRole = normalizeRole(role);
+
   const newUser = {
-    id: role === 'caregiver' ? `caregiver-${Date.now()}` : `patient-${Date.now()}`,
+    id: normalizedRole === 'caregiver' ? `caregiver-${Date.now()}` : `patient-${Date.now()}`,
     name: name.trim(),
     email: email.trim().toLowerCase(),
     password: password || 'password123',
-    role: role === 'caregiver' ? 'caregiver' : 'patient',
-    pairingCode: role === 'patient' ? generatePairingCode() : undefined,
-    connectedCaregivers: role === 'patient' ? [] : undefined,
-    connectedPatients: role === 'caregiver' ? [] : undefined,
+    role: normalizedRole,
+    pairingCode: normalizedRole === 'patient' ? generatePairingCode() : undefined,
+    connectedCaregivers: normalizedRole === 'patient' ? [] : undefined,
+    connectedPatients: normalizedRole === 'caregiver' ? [] : undefined,
     createdAt: new Date().toISOString(),
   };
 
@@ -214,12 +223,15 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   // Validate role selection: prevent Patient logging in as Caretaker and vice versa
-  if (role && user.role && user.role !== role) {
-    const userRoleLabel = user.role === 'caregiver' ? 'Caretaker' : 'Patient';
-    const selectedRoleLabel = role === 'caregiver' ? 'Caretaker' : 'Patient';
-    return res.status(400).json({
-      error: `This account is registered as a ${userRoleLabel}. Please select '${userRoleLabel}' to sign in.`,
-    });
+  if (role) {
+    const userRole = normalizeRole(user.role);
+    const selectedRole = normalizeRole(role);
+    if (userRole !== selectedRole) {
+      const userRoleLabel = userRole === 'caregiver' ? 'Caretaker' : 'Patient';
+      return res.status(400).json({
+        error: `This account is registered as a ${userRoleLabel}. Please select '${userRoleLabel}' to sign in.`,
+      });
+    }
   }
 
   if (password && user.password && user.password !== password) {
@@ -249,8 +261,10 @@ app.get('/api/auth/users/:id', (req, res) => {
 
 // Caregiver connects to patient using pairing code
 app.post('/api/caregiver/connect', (req, res) => {
-  const { caregiverId, pairingCode, relationship } = req.body;
-  if (!caregiverId || !pairingCode) {
+  const { caregiverId, pairingCode, code, relationship } = req.body;
+  const targetCode = (pairingCode || code || '').trim().toUpperCase();
+
+  if (!caregiverId || !targetCode) {
     return res.status(400).json({ error: 'Caregiver ID and Patient Pairing Code are required.' });
   }
 
@@ -261,7 +275,7 @@ app.post('/api/caregiver/connect', (req, res) => {
   }
 
   const patientIndex = users.findIndex(
-    (u) => u.pairingCode && u.pairingCode.toUpperCase() === pairingCode.trim().toUpperCase()
+    (u) => u.pairingCode && u.pairingCode.toUpperCase() === targetCode
   );
   if (patientIndex === -1) {
     return res.status(404).json({ error: 'Invalid Patient Pairing Code. Please check the code.' });
