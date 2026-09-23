@@ -197,11 +197,11 @@ app.post('/api/auth/register', (req, res) => {
   res.status(201).json(newUser);
 });
 
-// Login
+// Login with role validation
 app.post('/api/auth/login', (req, res) => {
   const { email, password, role } = req.body;
   if (!email || !email.trim()) {
-    return res.status(400).json({ error: 'Email is required.' });
+    return res.status(400).json({ error: 'Email address is required.' });
   }
 
   const users = readUsers();
@@ -210,11 +210,20 @@ app.post('/api/auth/login', (req, res) => {
   );
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found. Please register first.' });
+    return res.status(404).json({ error: 'User not found. Please register an account first.' });
+  }
+
+  // Validate role selection: prevent Patient logging in as Caretaker and vice versa
+  if (role && user.role && user.role !== role) {
+    const userRoleLabel = user.role === 'caregiver' ? 'Caretaker' : 'Patient';
+    const selectedRoleLabel = role === 'caregiver' ? 'Caretaker' : 'Patient';
+    return res.status(400).json({
+      error: `This account is registered as a ${userRoleLabel}. Please select '${userRoleLabel}' to sign in.`,
+    });
   }
 
   if (password && user.password && user.password !== password) {
-    return res.status(401).json({ error: 'Incorrect password.' });
+    return res.status(401).json({ error: 'Incorrect password. Please try again.' });
   }
 
   res.json(user);

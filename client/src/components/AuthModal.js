@@ -15,7 +15,9 @@ export default function AuthModal({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [relationship, setRelationship] = useState('');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -25,12 +27,48 @@ export default function AuthModal({
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+
+    if (!email || !email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+
+    if (isRegister) {
+      if (!name || !name.trim()) {
+        setError('Please enter your full name.');
+        return;
+      }
+      if (password.length < 4) {
+        setError('Password must be at least 4 characters long.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match. Please re-enter your password.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     const endpoint = isRegister ? `${API_AUTH}/register` : `${API_AUTH}/login`;
     const payload = isRegister
-      ? { name: name.trim(), email: email.trim(), password, role, relationship: relationship.trim() }
-      : { email: email.trim(), password };
+      ? {
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          role,
+          relationship: relationship.trim(),
+        }
+      : {
+          email: email.trim(),
+          password,
+          role,
+        };
 
     try {
       const res = await fetch(endpoint, {
@@ -46,10 +84,10 @@ export default function AuthModal({
       } else {
         const text = await res.text();
         if (text.includes('Cannot POST') || text.includes('Cannot GET')) {
-          throw new Error('Endpoint not found. Please restart your backend server.');
+          throw new Error('API endpoint not found. Please restart your backend server.');
         }
         if (text.includes('Proxy error') || res.status === 504 || res.status === 502) {
-          throw new Error('Backend server is not running on port 5000. Please start the server in terminal.');
+          throw new Error('Backend server is not reachable on port 5000. Please ensure the server is running.');
         }
         const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         throw new Error(cleanText || 'Server returned an invalid response');
@@ -60,11 +98,13 @@ export default function AuthModal({
       }
 
       if (isRegister) {
-        // Switch to Sign In tab upon registration so user logs in with credentials
+        // STRICT REQUIREMENT: Registration does NOT auto-login.
+        // Switch to Login tab, clear passwords, and prompt the user to manually sign in.
         setIsRegister(false);
         setPassword('');
+        setConfirmPassword('');
         setError('');
-        setSuccessMessage(`✓ Account created successfully for ${data.name}! Please enter your password to sign in.`);
+        setSuccessMessage('Registration successful! Please login with your credentials.');
       } else {
         onLogin(data);
       }
@@ -73,6 +113,14 @@ export default function AuthModal({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTabSwitch = (toRegister) => {
+    setIsRegister(toRegister);
+    setError('');
+    setSuccessMessage('');
+    setPassword('');
+    setConfirmPassword('');
   };
 
   return (
@@ -130,30 +178,38 @@ export default function AuthModal({
             <button
               type="button"
               className={`auth-main-tab ${!isRegister ? 'auth-main-tab--active' : ''}`}
-              onClick={() => {
-                setIsRegister(false);
-                setError('');
-                setSuccessMessage('');
-              }}
+              onClick={() => handleTabSwitch(false)}
             >
               🔑 {t.signIn || 'Sign In'}
             </button>
             <button
               type="button"
               className={`auth-main-tab ${isRegister ? 'auth-main-tab--active' : ''}`}
-              onClick={() => {
-                setIsRegister(true);
-                setError('');
-                setSuccessMessage('');
-              }}
+              onClick={() => handleTabSwitch(true)}
             >
               📝 {t.registerBtn || 'Create Account'}
             </button>
           </div>
 
+          {/* Success Notification Banner */}
           {successMessage && (
-            <div className="badge badge--success" style={{ display: 'block', padding: '10px 14px', marginBottom: '14px', borderRadius: '8px', fontSize: '0.9rem', lineHeight: '1.4' }}>
-              {successMessage}
+            <div
+              className="badge badge--success"
+              style={{
+                display: 'block',
+                padding: '12px 14px',
+                marginBottom: '16px',
+                borderRadius: '8px',
+                fontSize: '0.92rem',
+                lineHeight: '1.45',
+                border: '1px solid #86efac',
+                backgroundColor: '#f0fdf4',
+                color: '#166534',
+                fontWeight: '600',
+              }}
+              role="status"
+            >
+              ✓ {successMessage}
             </div>
           )}
 
@@ -163,41 +219,41 @@ export default function AuthModal({
             </h2>
             <p className="auth-modal__subheading">
               {isRegister
-                ? 'Select whether you are a Patient or Caretaker to set up your account.'
-                : 'Enter your email and password to access your schedule and alerts.'}
+                ? 'Fill in your details below to set up your account.'
+                : 'Select your role and enter your credentials to open your dashboard.'}
             </p>
           </div>
 
-          {/* Role Toggle Selector (Only when registering) */}
-          {isRegister && (
-            <div className="auth-role-section">
-              <span className="field-label-sm">{t.selectRole || 'I am registering as:'}</span>
-              <div className="auth-role-selector">
-                <button
-                  type="button"
-                  className={`auth-role-btn ${role === 'patient' ? 'auth-role-btn--active' : ''}`}
-                  onClick={() => setRole('patient')}
-                >
-                  <IconUser size={18} />
-                  <div style={{ textAlign: 'left' }}>
-                    <strong style={{ display: 'block' }}>{t.patientRole || 'Patient'}</strong>
-                    <small style={{ fontSize: '0.74rem', opacity: 0.85 }}>Track medicines & alarms</small>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className={`auth-role-btn ${role === 'caregiver' ? 'auth-role-btn--active' : ''}`}
-                  onClick={() => setRole('caregiver')}
-                >
-                  <IconShield size={18} />
-                  <div style={{ textAlign: 'left' }}>
-                    <strong style={{ display: 'block' }}>{t.caregiverRole || 'Caretaker'}</strong>
-                    <small style={{ fontSize: '0.74rem', opacity: 0.85 }}>Monitor family & adherence</small>
-                  </div>
-                </button>
-              </div>
+          {/* Role Selection (Mandatory for both Login and Registration) */}
+          <div className="auth-role-section">
+            <span className="field-label-sm">
+              <strong>{isRegister ? (t.selectRole || 'I am registering as:') : (t.whoAreYou || 'Who are you? (Select your role):')}</strong>
+            </span>
+            <div className="auth-role-selector">
+              <button
+                type="button"
+                className={`auth-role-btn ${role === 'patient' ? 'auth-role-btn--active' : ''}`}
+                onClick={() => setRole('patient')}
+              >
+                <IconUser size={20} />
+                <div style={{ textAlign: 'left' }}>
+                  <strong style={{ display: 'block', fontSize: '0.95rem' }}>{t.patientRole || 'Patient'}</strong>
+                  <small style={{ fontSize: '0.74rem', opacity: 0.85 }}>Personal medicines & alarms</small>
+                </div>
+              </button>
+              <button
+                type="button"
+                className={`auth-role-btn ${role === 'caregiver' ? 'auth-role-btn--active' : ''}`}
+                onClick={() => setRole('caregiver')}
+              >
+                <IconShield size={20} />
+                <div style={{ textAlign: 'left' }}>
+                  <strong style={{ display: 'block', fontSize: '0.95rem' }}>{t.caregiverRole || 'Caretaker'}</strong>
+                  <small style={{ fontSize: '0.74rem', opacity: 0.85 }}>Monitor patient & adherence</small>
+                </div>
+              </button>
             </div>
-          )}
+          </div>
 
           {/* Auth Form */}
           <form onSubmit={handleSubmit} className="auth-form">
@@ -210,6 +266,7 @@ export default function AuthModal({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Ramesh Kumar"
                   required
+                  autoFocus
                 />
               </label>
             )}
@@ -232,7 +289,7 @@ export default function AuthModal({
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={isRegister ? 'Create a secure password' : 'Enter your password'}
                   required
                 />
                 <button
@@ -247,9 +304,34 @@ export default function AuthModal({
               </div>
             </label>
 
+            {/* Confirm Password (Registration only) */}
+            {isRegister && (
+              <label className="field">
+                <span>Confirm Password *</span>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+                  </button>
+                </div>
+              </label>
+            )}
+
             {isRegister && role === 'caregiver' && (
               <label className="field">
-                <span>Relationship (e.g. Daughter, Doctor, Nurse)</span>
+                <span>Relationship to Patient (e.g. Daughter, Doctor, Nurse)</span>
                 <input
                   type="text"
                   value={relationship}
@@ -262,15 +344,11 @@ export default function AuthModal({
             {error && (
               <div className="field-error" role="alert">
                 <span>⚠️ {error}</span>
-                {error.toLowerCase().includes('not found') && (
+                {error.toLowerCase().includes('not found') && !isRegister && (
                   <button
                     type="button"
                     className="error-link-btn"
-                    onClick={() => {
-                      setIsRegister(true);
-                      setError('');
-                      setSuccessMessage('');
-                    }}
+                    onClick={() => handleTabSwitch(true)}
                   >
                     Click here to Create Account →
                   </button>
@@ -279,7 +357,11 @@ export default function AuthModal({
             )}
 
             <button type="submit" className="btn btn--primary auth-submit-btn" disabled={loading}>
-              {loading ? 'Please wait...' : isRegister ? (t.registerBtn || 'Create Account') : (t.loginBtn || 'Sign In')}
+              {loading
+                ? 'Please wait...'
+                : isRegister
+                ? (t.registerBtn || 'Register Account')
+                : (t.loginBtn || `Sign In as ${role === 'caregiver' ? 'Caretaker' : 'Patient'}`)}
             </button>
           </form>
 
@@ -290,11 +372,7 @@ export default function AuthModal({
             <button
               type="button"
               className="auth-link-btn"
-              onClick={() => {
-                setIsRegister(!isRegister);
-                setError('');
-                setSuccessMessage('');
-              }}
+              onClick={() => handleTabSwitch(!isRegister)}
             >
               {isRegister ? (t.signIn || 'Sign In') : (t.register || 'Create Account')}
             </button>

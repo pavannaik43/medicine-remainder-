@@ -116,5 +116,15 @@
       }
     ],
     "createdAt": "2026-09-23T11:30:56.719Z"
+  },
+  {
+    "id": "patient-1790164731966",
+    "name": "Kiran Rao",
+    "email": "test_patient_d72627@example.com",
+    "password": "password123",
+    "role": "patient",
+    "pairingCode": "MED-2982",
+    "connectedCaregivers": [],
+    "createdAt": "2026-09-23T11:58:51.966Z"
   }
 ]
