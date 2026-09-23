@@ -478,7 +478,7 @@ app.put('/api/reminders/:id', (req, res) => {
     const status = req.body.logDose.status || 'taken'; // 'taken' | 'taken_late' | 'missed'
     history.unshift({
       id: crypto.randomUUID(),
-      patientId: updated.patientId || 'patient-1',
+      patientId: req.body.logDose.patientId || updated.patientId || 'patient-1',
       reminderId: id,
       name: updated.name,
       dosage: updated.dosage || '',

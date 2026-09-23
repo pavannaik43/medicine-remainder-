@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { IconHistory, IconSearch, IconDownload, IconTrash, IconCheck, IconPill, IconClock } from './Icons';
 
-export default function HistorySection({ history, onDeleteEntry, onClearHistory, t = {} }) {
+export default function HistorySection({ history = [], currentUser, onDeleteEntry, onClearHistory, t = {} }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRange, setFilterRange] = useState('all'); // all | today | 7days | 30days
 
@@ -85,7 +85,9 @@ export default function HistorySection({ history, onDeleteEntry, onClearHistory,
           <div>
             <h2 className="section-title">{t.historyTitle || 'Medicine History'}</h2>
             <p className="section-subtitle">
-              {t.historySubtitle || 'Record of all medicines taken in the past'}
+              {currentUser?.name
+                ? `Intake records for ${currentUser.name}`
+                : (t.historySubtitle || 'Record of all medicines taken in the past')}
             </p>
           </div>
         </div>
@@ -168,7 +170,7 @@ export default function HistorySection({ history, onDeleteEntry, onClearHistory,
           <p>
             {searchTerm || filterRange !== 'all'
               ? 'No medicines match your current search.'
-              : 'Medicines will automatically appear here once marked as taken.'}
+              : `No intake records logged for ${currentUser?.name || 'this patient'} yet. Mark medicines as TAKEN in Today's Medicines to record history.`}
           </p>
         </div>
       ) : (

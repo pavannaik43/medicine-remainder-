@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { IconChart, IconShield, IconPill, IconCheck, IconClock } from './Icons';
 
-export default function AnalyticsSection({ reminders, history, t = {} }) {
-  // Calculate today's adherence
-  const totalToday = reminders.length;
-  const takenToday = reminders.filter((r) => r.taken).length;
-  const todayAdherencePct = totalToday > 0 ? Math.round((takenToday / totalToday) * 100) : 100;
+export default function AnalyticsSection({ reminders = [], history = [], todayDoses = [], t = {} }) {
+  // Calculate today's adherence accurately using today's scheduled dose items
+  const totalToday = todayDoses.length;
+  const takenToday = todayDoses.filter((d) => d.taken).length;
+  const todayAdherencePct = totalToday > 0 ? Math.round((takenToday / totalToday) * 100) : 0;
 
   // Calculate 7-day adherence trends
   const past7DaysLogs = useMemo(() => {

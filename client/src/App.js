@@ -344,7 +344,14 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           takenDoses: { ...(reminder.takenDoses || {}), [todayDateStr]: updatedIndices },
-          logDose: nextTaken ? { time, doseLabel, status: 'taken' } : undefined,
+          logDose: nextTaken
+            ? {
+                time,
+                doseLabel,
+                status: 'taken',
+                patientId: currentUser?.id || reminder.patientId || 'patient-1',
+              }
+            : undefined,
         }),
       });
     } catch (err) {
@@ -764,6 +771,7 @@ export default function App() {
         {!loading && !loadError && activeTab === 'history' && (
           <HistorySection
             history={history}
+            currentUser={currentUser}
             onDeleteEntry={handleDeleteHistoryEntry}
             onClearHistory={handleClearHistory}
             t={t}
@@ -772,7 +780,13 @@ export default function App() {
 
         {/* Tab 3: Progress & Stock */}
         {!loading && !loadError && activeTab === 'analytics' && (
-          <AnalyticsSection reminders={reminders} history={history} t={t} />
+          <AnalyticsSection
+            reminders={reminders}
+            history={history}
+            todayDoses={todayDoses}
+            currentUser={currentUser}
+            t={t}
+          />
         )}
       </div>
 
