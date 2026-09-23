@@ -18,11 +18,13 @@ export default function AuthModal({
   const [showPassword, setShowPassword] = useState(false);
   const [relationship, setRelationship] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     const endpoint = isRegister ? `${API_AUTH}/register` : `${API_AUTH}/login`;
@@ -57,7 +59,15 @@ export default function AuthModal({
         throw new Error(data.error || 'Authentication failed');
       }
 
-      onLogin(data);
+      if (isRegister) {
+        // Switch to Sign In tab upon registration so user logs in with credentials
+        setIsRegister(false);
+        setPassword('');
+        setError('');
+        setSuccessMessage(`✓ Account created successfully for ${data.name}! Please enter your password to sign in.`);
+      } else {
+        onLogin(data);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -123,6 +133,7 @@ export default function AuthModal({
               onClick={() => {
                 setIsRegister(false);
                 setError('');
+                setSuccessMessage('');
               }}
             >
               🔑 {t.signIn || 'Sign In'}
@@ -133,11 +144,18 @@ export default function AuthModal({
               onClick={() => {
                 setIsRegister(true);
                 setError('');
+                setSuccessMessage('');
               }}
             >
               📝 {t.registerBtn || 'Create Account'}
             </button>
           </div>
+
+          {successMessage && (
+            <div className="badge badge--success" style={{ display: 'block', padding: '10px 14px', marginBottom: '14px', borderRadius: '8px', fontSize: '0.9rem', lineHeight: '1.4' }}>
+              {successMessage}
+            </div>
+          )}
 
           <div className="auth-header-text">
             <h2 id="auth-title" className="auth-modal__heading">
@@ -145,7 +163,7 @@ export default function AuthModal({
             </h2>
             <p className="auth-modal__subheading">
               {isRegister
-                ? 'Register as a Patient or Caretaker to start tracking medicines.'
+                ? 'Select whether you are a Patient or Caretaker to set up your account.'
                 : 'Enter your email and password to access your schedule and alerts.'}
             </p>
           </div>
@@ -161,7 +179,10 @@ export default function AuthModal({
                   onClick={() => setRole('patient')}
                 >
                   <IconUser size={18} />
-                  <span>{t.patientRole || 'Patient'}</span>
+                  <div style={{ textAlign: 'left' }}>
+                    <strong style={{ display: 'block' }}>{t.patientRole || 'Patient'}</strong>
+                    <small style={{ fontSize: '0.74rem', opacity: 0.85 }}>Track medicines & alarms</small>
+                  </div>
                 </button>
                 <button
                   type="button"
@@ -169,7 +190,10 @@ export default function AuthModal({
                   onClick={() => setRole('caregiver')}
                 >
                   <IconShield size={18} />
-                  <span>{t.caregiverRole || 'Caretaker / Caregiver'}</span>
+                  <div style={{ textAlign: 'left' }}>
+                    <strong style={{ display: 'block' }}>{t.caregiverRole || 'Caretaker'}</strong>
+                    <small style={{ fontSize: '0.74rem', opacity: 0.85 }}>Monitor family & adherence</small>
+                  </div>
                 </button>
               </div>
             </div>
@@ -245,6 +269,7 @@ export default function AuthModal({
                     onClick={() => {
                       setIsRegister(true);
                       setError('');
+                      setSuccessMessage('');
                     }}
                   >
                     Click here to Create Account →
@@ -268,6 +293,7 @@ export default function AuthModal({
               onClick={() => {
                 setIsRegister(!isRegister);
                 setError('');
+                setSuccessMessage('');
               }}
             >
               {isRegister ? (t.signIn || 'Sign In') : (t.register || 'Create Account')}

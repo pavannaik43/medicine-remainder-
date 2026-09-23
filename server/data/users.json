@@ -80,5 +80,41 @@
     "pairingCode": "MED-2817",
     "connectedCaregivers": [],
     "createdAt": "2026-09-22T18:11:56.099Z"
+  },
+  {
+    "id": "patient-1790163056668",
+    "name": "Test Patient",
+    "email": "patient_test_1937172805@example.com",
+    "password": "password123",
+    "role": "patient",
+    "pairingCode": "MED-5480",
+    "connectedCaregivers": [
+      {
+        "id": "caregiver-1790163056719",
+        "name": "Test Caregiver",
+        "email": "caregiver_test_634162123@example.com",
+        "relationship": "Daughter",
+        "connectedAt": "2026-09-23T11:30:56.723Z"
+      }
+    ],
+    "createdAt": "2026-09-23T11:30:56.668Z"
+  },
+  {
+    "id": "caregiver-1790163056719",
+    "name": "Test Caregiver",
+    "email": "caregiver_test_634162123@example.com",
+    "password": "password123",
+    "role": "caregiver",
+    "connectedPatients": [
+      {
+        "id": "patient-1790163056668",
+        "name": "Test Patient",
+        "email": "patient_test_1937172805@example.com",
+        "pairingCode": "MED-5480",
+        "relationship": "Daughter",
+        "connectedAt": "2026-09-23T11:30:56.723Z"
+      }
+    ],
+    "createdAt": "2026-09-23T11:30:56.719Z"
   }
 ]

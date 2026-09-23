@@ -14,7 +14,7 @@ import CaregiverAccessModal from './components/CaregiverAccessModal';
 import { PERIODS, getPeriod } from './timeOfDay';
 import { startAlarm, stopAlarm, unlockAudio } from './utils/soundService';
 import { getTranslation } from './utils/translations';
-import { API_REMININDERS as API_BASE, API_HISTORY as HISTORY_API_BASE, API_PATIENT } from './config/api';
+import { API_REMININDERS as API_BASE, API_HISTORY as HISTORY_API_BASE, API_PATIENT, API_AUTH } from './config/api';
 
 function isReminderScheduledForDate(reminder, date) {
   const dayOfWeek = date.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
@@ -99,7 +99,7 @@ export default function App() {
 
   const firedMinutesRef = useRef(new Set());
 
-  // Load reminders and history for current user (or all if caregiver)
+  // Load reminders and history for current user (or all if caregiver) and sync user profile
   const loadData = useCallback(async () => {
     if (!currentUser) {
       setLoading(false);
@@ -108,9 +108,10 @@ export default function App() {
     try {
       setLoading(true);
       const patientParam = currentUser?.role === 'patient' ? `?patientId=${currentUser.id}` : '';
-      const [resReminders, resHistory] = await Promise.all([
+      const [resReminders, resHistory, resUser] = await Promise.all([
         fetch(`${API_BASE}${patientParam}`),
         fetch(`${HISTORY_API_BASE}${patientParam}`),
+        fetch(`${API_AUTH}/users/${currentUser.id}`),
       ]);
 
       if (!resReminders.ok) throw new Error('Failed to load reminders');
@@ -121,13 +122,23 @@ export default function App() {
         const dataHistory = await resHistory.json();
         setHistory(dataHistory);
       }
+
+      if (resUser.ok) {
+        const freshUser = await resUser.json();
+        if (freshUser && freshUser.id) {
+          setCurrentUser(freshUser);
+          try {
+            localStorage.setItem('app_user', JSON.stringify(freshUser));
+          } catch (e) {}
+        }
+      }
       setLoadError('');
     } catch (err) {
       setLoadError('Could not connect to the medication API server.');
     } finally {
       setLoading(false);
     }
-  }, [currentUser]);
+  }, [currentUser?.id, currentUser?.role]);
 
   useEffect(() => {
     loadData();
@@ -793,6 +804,12 @@ export default function App() {
           currentUser={currentUser}
           onClose={() => setCaregiverAccessModalOpen(false)}
           onRevokeCaregiver={handleRevokeCaregiver}
+          onUpdateUser={(updated) => {
+            setCurrentUser(updated);
+            try {
+              localStorage.setItem('app_user', JSON.stringify(updated));
+            } catch (e) {}
+          }}
           t={t}
         />
       )}
